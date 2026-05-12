@@ -6,8 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 type Report = { node?: string; issue?: string; urgency?: string; notes?: string; ts: number };
 
 const SAMPLE_ANOMALIES = [
-    { id: 'a1', title: 'Anomali - Titik 1C GKU 2', desc: 'Lampu latri terdeteksi patah condsi pelap (15 lux). Energi tindalangen.', ts: Date.now() - 1000 * 60 * 20 },
-    { id: 'a2', title: 'Hemat Energi - Titik 3B Asrama', desc: 'Mode hemat aktif, aktif, me perakan selama 5 menit.', ts: Date.now() - 1000 * 60 * 40 },
+    { id: 'a1', title: 'Anomali - Titik 1C GKU 2', desc: 'Lampu terdeteksi meredup tanpa alasan.', ts: Date.now() - 1000 * 60 * 20 },
+    { id: 'a2', title: 'Hemat Energi - Titik 3B Asrama', desc: 'Mode hemat aktif, namun tidak berespon pada pergerakan.', ts: Date.now() - 1000 * 60 * 40 },
 ];
 
 const HistoryScreen: React.FC = () => {

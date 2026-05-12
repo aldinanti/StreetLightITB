@@ -8,9 +8,9 @@ const SUMMARY = [
 ];
 
 const NODES = [
-    { title: 'Titik 2A - Gerbang Utama', desc: '450 lux · PWM 100% · Geram', status: 'Aktif', statusColor: '#7DD3FC' },
-    { title: 'Titik 3B - Gedung KOICA', desc: '120 lux · PWM 0% · Delal ad gerakan', status: 'Hemat', statusColor: '#FBBF24' },
-    { title: 'Titik 1C - GKU 2', desc: '15 lux · PWM 0% · A Celap, lampu pucil', status: 'Anomali', statusColor: '#FB7185' }
+    { title: 'Titik 2A - Gerbang Utama', desc: '450 lux · PWM 100%', status: 'Aktif', statusColor: '#7DD3FC' },
+    { title: 'Titik 3B - Gedung KOICA', desc: '120 lux · PWM 0%', status: 'Hemat', statusColor: '#FBBF24' },
+    { title: 'Titik 1C - GKU 2', desc: '15 lux · PWM 0%', status: 'Anomali', statusColor: '#FB7185' }
 ];
 
 const HomeScreen: React.FC = () => {

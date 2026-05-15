@@ -3,6 +3,7 @@ import { View, Image, StyleSheet, ActivityIndicator, Animated, StatusBar, Toucha
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import HomeScreen from './screens/HomeScreen';
@@ -21,28 +22,28 @@ function Splash({ onFinish }: { onFinish: () => void }) {
     const scale = useRef(new Animated.Value(0.96)).current;
 
     useEffect(() => {
-        const fadeIn = Animated.parallel([
-            Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
-            Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
-        ]);
-
-        let holdTimer: ReturnType<typeof setTimeout> | null = null;
-
-        fadeIn.start(() => {
-            holdTimer = setTimeout(() => {
+        // Animation sequence
+        Animated.parallel([
+            Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: false }),
+            Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: false }),
+        ]).start(() => {
+            setTimeout(() => {
                 Animated.parallel([
-                    Animated.timing(opacity, { toValue: 0, duration: 600, useNativeDriver: true }),
-                    Animated.timing(scale, { toValue: 1.04, duration: 600, useNativeDriver: true }),
-                ]).start(({ finished }) => {
-                    if (finished) onFinish();
-                });
+                    Animated.timing(opacity, { toValue: 0, duration: 600, useNativeDriver: false }),
+                    Animated.timing(scale, { toValue: 1.04, duration: 600, useNativeDriver: false }),
+                ]).start();
             }, 3000);
         });
 
+        // Guaranteed transition to main screen after 4.3 seconds
+        const holdTimer = setTimeout(() => {
+            onFinish();
+        }, 4300);
+
         return () => {
-            if (holdTimer) clearTimeout(holdTimer);
+            clearTimeout(holdTimer);
         };
-    }, [onFinish, opacity, scale]);
+    }, []); // Empty dependency array to prevent re-renders from clearing the timer
 
     return (
         <View style={splashStyles.container}>
@@ -56,49 +57,56 @@ function Splash({ onFinish }: { onFinish: () => void }) {
     );
 }
 
+function MainTabsComponent() {
+    return (
+        <Tab.Navigator
+            id="MainTabs"
+            screenOptions={({ route, navigation }) => ({
+                headerShown: true,
+                headerRight: () => (
+                    <TouchableOpacity onPress={() => navigation.navigate('Logout')} style={{ marginRight: 12 }}>
+                        <Text style={{ color: '#9be7ff', fontWeight: '600' }}>Keluar</Text>
+                    </TouchableOpacity>
+                ),
+                tabBarIcon: ({ color, size }) => {
+                    let name: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
+                    if (route.name === 'Home') name = 'home-outline';
+                    else if (route.name === 'Peta') name = 'map-outline';
+                    else if (route.name === 'Laporan') name = 'document-text-outline';
+                    else if (route.name === 'Riwayat') name = 'time-outline';
+                    return <Ionicons name={name} size={size} color={color} />;
+                },
+                tabBarActiveTintColor: '#9be7ff',
+                tabBarInactiveTintColor: '#c3ccd1',
+                tabBarStyle: { backgroundColor: '#0b141a', borderTopColor: 'rgba(255,255,255,0.03)' },
+            })}
+        >
+            <Tab.Screen name="Home" component={HomeScreen} />
+            <Tab.Screen name="Peta" component={MapScreen} />
+            <Tab.Screen name="Laporan" component={ReportScreen} />
+            <Tab.Screen name="Riwayat" component={HistoryScreen} />
+        </Tab.Navigator>
+    );
+}
+
 export default function App(): JSX.Element {
     const [showSplash, setShowSplash] = useState(true);
 
-    if (showSplash) return <Splash onFinish={() => setShowSplash(false)} />;
-
     return (
-        <NavigationContainer>
-            <Stack.Navigator>
-                <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
-                <Stack.Screen name="Register" options={{ headerShown: false }} component={RegisterScreen} />
-                <Stack.Screen name="MainTabs" options={{ headerShown: false }}>
-                    {() => (
-                        <Tab.Navigator
-                            screenOptions={({ route, navigation }) => ({
-                                headerShown: true,
-                                headerRight: () => (
-                                    <TouchableOpacity onPress={() => navigation.navigate('Logout')} style={{ marginRight: 12 }}>
-                                        <Text style={{ color: '#9be7ff', fontWeight: '600' }}>Keluar</Text>
-                                    </TouchableOpacity>
-                                ),
-                                tabBarIcon: ({ color, size }) => {
-                                    let name: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
-                                    if (route.name === 'Home') name = 'home-outline';
-                                    else if (route.name === 'Peta') name = 'map-outline';
-                                    else if (route.name === 'Laporan') name = 'document-text-outline';
-                                    else if (route.name === 'Riwayat') name = 'time-outline';
-                                    return <Ionicons name={name} size={size} color={color} />;
-                                },
-                                tabBarActiveTintColor: '#9be7ff',
-                                tabBarInactiveTintColor: '#c3ccd1',
-                                tabBarStyle: { backgroundColor: '#0b141a', borderTopColor: 'rgba(255,255,255,0.03)' },
-                            })}
-                        >
-                            <Tab.Screen name="Home" component={HomeScreen} />
-                            <Tab.Screen name="Peta" component={MapScreen} />
-                            <Tab.Screen name="Laporan" component={ReportScreen} />
-                            <Tab.Screen name="Riwayat" component={HistoryScreen} />
-                        </Tab.Navigator>
-                    )}
-                </Stack.Screen>
-                <Stack.Screen name="Logout" component={LogoutScreen} options={{ presentation: 'modal', title: 'Keluar' }} />
-            </Stack.Navigator>
-        </NavigationContainer>
+        <SafeAreaProvider style={{ flex: 1 }}>
+            {showSplash ? (
+                <Splash onFinish={() => setShowSplash(false)} />
+            ) : (
+                <NavigationContainer>
+                    <Stack.Navigator id="RootStack">
+                        <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
+                        <Stack.Screen name="Register" options={{ headerShown: false }} component={RegisterScreen} />
+                        <Stack.Screen name="MainTabs" options={{ headerShown: false }} component={MainTabsComponent} />
+                        <Stack.Screen name="Logout" component={LogoutScreen} options={{ presentation: 'modal', title: 'Keluar' }} />
+                    </Stack.Navigator>
+                </NavigationContainer>
+            )}
+        </SafeAreaProvider>
     );
 }
 

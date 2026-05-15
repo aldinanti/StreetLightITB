@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    SafeAreaView,
     View,
     Text,
     TextInput,
@@ -12,6 +11,7 @@ import {
     Platform,
     ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegisterScreen({ navigation, onRegister }: any) {
     const [name, setName] = useState('');
@@ -23,8 +23,8 @@ export default function RegisterScreen({ navigation, onRegister }: any) {
 
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(logoScale, { toValue: 1, duration: 450, useNativeDriver: true }),
-            Animated.timing(logoOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
+            Animated.timing(logoScale, { toValue: 1, duration: 450, useNativeDriver: false }),
+            Animated.timing(logoOpacity, { toValue: 1, duration: 450, useNativeDriver: false }),
         ]).start();
     }, [logoScale, logoOpacity]);
 

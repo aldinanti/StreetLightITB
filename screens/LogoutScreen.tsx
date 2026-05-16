@@ -17,7 +17,7 @@ export default function LogoutScreen({ navigation, route }: any) {
         <SafeAreaView style={styles.safe}>
             <View style={styles.container}>
                 <Text style={styles.title}>Keluar</Text>
-                <Text style={styles.subtitle}>Apakah Anda yakin ingin keluar dari akun?</Text>
+                <Text style={styles.subtitle}>Apakah Anda yakin ingin keluar?</Text>
 
                 <View style={styles.actions}>
                     <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>

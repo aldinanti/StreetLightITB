@@ -63,9 +63,12 @@ function MainTabsComponent() {
             id="MainTabs"
             screenOptions={({ route, navigation }) => ({
                 headerShown: true,
+                headerLeft: () => (
+                    <Image source={require('./assets/logo StreetLightITB.png')} style={{ width: 36, height: 36, marginLeft: 12 }} resizeMode="contain" />
+                ),
                 headerRight: () => (
                     <TouchableOpacity onPress={() => navigation.navigate('Logout')} style={{ marginRight: 12 }}>
-                        <Text style={{ color: '#9be7ff', fontWeight: '600' }}>Keluar</Text>
+                        <Text style={{ color: '#132147', fontWeight: '600' }}>Keluar</Text>
                     </TouchableOpacity>
                 ),
                 tabBarIcon: ({ color, size }) => {

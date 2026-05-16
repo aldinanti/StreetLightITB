@@ -72,19 +72,19 @@ export default function RegisterScreen({ navigation, onRegister }: any) {
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#0b141a' },
+    safe: { flex: 1, backgroundColor: '#000000' },
     container: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
     logo: { width: 140, height: 140, marginBottom: 18 },
     title: { color: '#fff', fontSize: 22, marginBottom: 12 },
-    card: { width: '100%', backgroundColor: '#000000', padding: 16, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
+    card: { width: '100%', backgroundColor: '#132147', padding: 16, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
     label: { color: '#a9b7c0', marginBottom: 6 },
-    input: { backgroundColor: '#000000', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#122026' },
+    input: { backgroundColor: '#081216', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#122026' },
     passwordRow: { flexDirection: 'row', alignItems: 'center' },
     toggleBtn: { paddingHorizontal: 8, marginLeft: 8 },
-    toggleText: { color: '#9be7ff' },
-    primaryBtn: { backgroundColor: '#9be7ff', paddingVertical: 12, borderRadius: 10, marginTop: 14, alignItems: 'center' },
-    primaryBtnText: { color: '#022027', fontWeight: '600' },
+    toggleText: { color: '#5b9cee' },
+    primaryBtn: { backgroundColor: '#5b9cee', paddingVertical: 12, borderRadius: 10, marginTop: 14, alignItems: 'center' },
+    primaryBtnText: { color: '#000000', fontWeight: '600' },
     row: { flexDirection: 'row', justifyContent: 'center', marginTop: 12 },
-    link: { color: '#9be7ff', fontWeight: '600' },
+    link: { color: '#5b9cee', fontWeight: '600' },
     small: { color: '#9aa6b0' },
 });

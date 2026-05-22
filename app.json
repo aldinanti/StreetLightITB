@@ -4,8 +4,7 @@
     "slug": "streetlightitb",
     "platforms": [
       "ios",
-      "android",
-      "web"
+      "android"
     ],
     "assetBundlePatterns": [
       "**/*"

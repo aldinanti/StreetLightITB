@@ -65,8 +65,8 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.safe}>
             <View style={styles.header}>
-                <Text style={styles.smallHeader}>Lokasi Node</Text>
-                <Text style={styles.title}>Peta Lampu</Text>
+                <Text style={styles.smallHeader}>Dashboard</Text>
+                <Text style={styles.title}>Monitoring Jatinangor</Text>
             </View>
 
             <View style={styles.mapWrap}>

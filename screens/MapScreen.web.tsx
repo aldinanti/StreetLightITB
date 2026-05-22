@@ -32,8 +32,8 @@ const MapScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.safe}>
             <View style={styles.header}>
-                <Text style={styles.smallHeader}>Lokasi Node</Text>
-                <Text style={styles.title}>Peta Lampu (Web Preview)</Text>
+                <Text style={styles.smallHeader}>Dashboard</Text>
+                <Text style={styles.title}>Monitoring Jatinangor (Web)</Text>
             </View>
 
             <View style={styles.mapWrap}>

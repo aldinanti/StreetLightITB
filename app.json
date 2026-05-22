@@ -11,7 +11,28 @@
       "**/*"
     ],
     "plugins": [
-      "expo-router"
-    ]
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "af4cd9c1-cf70-4d8e-8c8a-54d8525051c4"
+      }
+    },
+    "owner": "leticiaaldina",
+    "android": {
+      "package": "com.leticiaaldina.streetlightitb",
+      "config": {
+        "googleMaps": {
+          "apiKey": "GANTI_DENGAN_GOOGLE_MAPS_API_KEY_ANDA"
+        }
+      }
+    },
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/af4cd9c1-cf70-4d8e-8c8a-54d8525051c4"
+      
+    },
+    "ios": {}
   }
 }

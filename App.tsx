@@ -5,6 +5,8 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebaseConfig';
 
 import HomeScreen from './screens/HomeScreen';
 import MapScreen from './screens/MapScreen';
@@ -94,21 +96,53 @@ function MainTabsComponent() {
 
 export default function App(): JSX.Element {
     const [showSplash, setShowSplash] = useState(true);
-
+    const [authReady, setAuthReady] = useState(false);
+    const [initialRoute, setInitialRoute] = useState<'Login' | 'MainTabs'>('Login');
+ 
+    useEffect(() => {
+        if (showSplash) return;
+ 
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setInitialRoute(user ? 'MainTabs' : 'Login');
+            setAuthReady(true);
+        });
+ 
+        return () => unsubscribe();
+    }, [showSplash]);
+ 
+    if (showSplash) {
+        return (
+            <SafeAreaProvider style={{ flex: 1 }}>
+                <Splash onFinish={() => setShowSplash(false)} />
+            </SafeAreaProvider>
+        );
+    }
+ 
+    if (!authReady) {
+        // Menunggu Firebase cek sesi login yang tersimpan
+        return (
+            <SafeAreaProvider style={{ flex: 1 }}>
+                <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator color="#9be7ff" size="large" />
+                </View>
+            </SafeAreaProvider>
+        );
+    }
+ 
     return (
         <SafeAreaProvider style={{ flex: 1 }}>
-            {showSplash ? (
-                <Splash onFinish={() => setShowSplash(false)} />
-            ) : (
-                <NavigationContainer>
-                    <Stack.Navigator id="RootStack">
-                        <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
-                        <Stack.Screen name="Register" options={{ headerShown: false }} component={RegisterScreen} />
-                        <Stack.Screen name="MainTabs" options={{ headerShown: false }} component={MainTabsComponent} />
-                        <Stack.Screen name="Logout" component={LogoutScreen} options={{ presentation: 'modal', title: 'Keluar' }} />
-                    </Stack.Navigator>
-                </NavigationContainer>
-            )}
+            <NavigationContainer>
+                <Stack.Navigator id="RootStack" initialRouteName={initialRoute}>
+                    <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
+                    <Stack.Screen name="Register" options={{ headerShown: false }} component={RegisterScreen} />
+                    <Stack.Screen name="MainTabs" options={{ headerShown: false }} component={MainTabsComponent} />
+                    <Stack.Screen
+                        name="Logout"
+                        component={LogoutScreen}
+                        options={{ presentation: 'modal', title: 'Keluar' }}
+                    />
+                </Stack.Navigator>
+            </NavigationContainer>
         </SafeAreaProvider>
     );
 }

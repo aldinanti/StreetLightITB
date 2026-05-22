@@ -15,7 +15,7 @@ const ISSUE_OPTIONS = [
     'Lampu redup',
     'Kabel putus',
     'Flicker / kedip',
-    'Lainnya'
+    'Lampu pecah'
 ];
 
 const ReportScreen: React.FC<any> = ({ navigation }) => {

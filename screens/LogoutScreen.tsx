@@ -1,16 +1,19 @@
-import React from 'react';
-import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { logoutUser } from '../authService';
 
-export default function LogoutScreen({ navigation, route }: any) {
-    const handleLogout = () => {
-        if (route?.params?.onLogout) {
-            try {
-                route.params.onLogout();
-            } catch (e) {
-                // ignore
-            }
+export default function LogoutScreen({ navigation }: any) {
+    const [loading, setLoading] = useState(false);
+
+    const handleLogout = async () => {
+        setLoading(true);
+        try {
+            await logoutUser();
+            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+        } catch (e: any) {
+            Alert.alert('Error', 'Gagal keluar. Coba lagi.');
+            setLoading(false);
         }
-        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
     };
 
     return (
@@ -20,11 +23,24 @@ export default function LogoutScreen({ navigation, route }: any) {
                 <Text style={styles.subtitle}>Apakah Anda yakin ingin keluar?</Text>
 
                 <View style={styles.actions}>
-                    <TouchableOpacity style={styles.cancelBtn} onPress={() => navigation.goBack()}>
+                    <TouchableOpacity
+                        style={styles.cancelBtn}
+                        onPress={() => navigation.goBack()}
+                        disabled={loading}
+                    >
                         <Text style={styles.cancelText}>Batal</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-                        <Text style={styles.logoutText}>Keluar</Text>
+
+                    <TouchableOpacity
+                        style={[styles.logoutBtn, loading && styles.logoutBtnDisabled]}
+                        onPress={handleLogout}
+                        disabled={loading}
+                        activeOpacity={0.8}
+                    >
+                        {loading
+                            ? <ActivityIndicator color="#022027" />
+                            : <Text style={styles.logoutText}>Keluar</Text>
+                        }
                     </TouchableOpacity>
                 </View>
             </View>
@@ -41,5 +57,6 @@ const styles = StyleSheet.create({
     cancelBtn: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#0b1720', alignItems: 'center', marginRight: 8 },
     cancelText: { color: '#9aa6b0' },
     logoutBtn: { flex: 1, padding: 12, borderRadius: 10, backgroundColor: '#9be7ff', alignItems: 'center', marginLeft: 8 },
+    logoutBtnDisabled: { backgroundColor: '#5c8c96' },
     logoutText: { color: '#022027', fontWeight: '600' },
 });

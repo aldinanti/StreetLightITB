@@ -108,7 +108,7 @@ export default function LoginScreen({ navigation }: any) {
                             activeOpacity={0.8}
                         >
                             {loading
-                                ? <ActivityIndicator color="#000" />
+                                ? <ActivityIndicator color="#ffffff" />
                                 : <Text style={styles.primaryBtnText}>Masuk</Text>
                             }
                         </TouchableOpacity>
@@ -127,20 +127,20 @@ export default function LoginScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#000000' },
+    safe: { flex: 1, backgroundColor: '#1e3c72' },
     container: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
     logo: { width: 140, height: 140, marginBottom: 18 },
     title: { color: '#fff', fontSize: 22, marginBottom: 12 },
-    card: { width: '100%', backgroundColor: '#132147', padding: 16, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
-    label: { color: '#a9b7c0', marginBottom: 6 },
-    input: { backgroundColor: '#081216', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#122026' },
+    card: { width: '100%', backgroundColor: '#40619f', padding: 16, borderRadius: 12, shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 10 },
+    label: { color: '#e0e6f0', marginBottom: 6 },
+    input: { backgroundColor: '#1e3c72', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#405987' },
     passwordRow: { flexDirection: 'row', alignItems: 'center' },
     toggleBtn: { paddingHorizontal: 8, marginLeft: 8 },
-    toggleText: { color: '#5b9cee' },
-    primaryBtn: { backgroundColor: '#5b9cee', paddingVertical: 12, borderRadius: 10, marginTop: 14, alignItems: 'center' },
-    primaryBtnDisabled: { backgroundColor: '#3a5a8a', opacity: 0.7 },
-    primaryBtnText: { color: '#000000', fontWeight: '600' },
+    toggleText: { color: '#ffffff' },
+    primaryBtn: { backgroundColor: '#295196', paddingVertical: 12, borderRadius: 10, marginTop: 14, alignItems: 'center' },
+    primaryBtnDisabled: { backgroundColor: '#405987', opacity: 0.7 },
+    primaryBtnText: { color: '#ffffff', fontWeight: '600' },
     row: { flexDirection: 'row', justifyContent: 'center', marginTop: 12 },
-    link: { color: '#5b9cee', fontWeight: '600' },
-    small: { color: '#9aa6b0' },
+    link: { color: '#ffffff', fontWeight: '600' },
+    small: { color: '#e0e6f0' },
 });

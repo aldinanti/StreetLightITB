@@ -36,7 +36,6 @@ function Splash({ onFinish }: { onFinish: () => void }) {
             }, 3000);
         });
 
-        // Guaranteed transition to main screen after 4.3 seconds
         const holdTimer = setTimeout(() => {
             onFinish();
         }, 4300);
@@ -44,7 +43,7 @@ function Splash({ onFinish }: { onFinish: () => void }) {
         return () => {
             clearTimeout(holdTimer);
         };
-    }, []); // Empty dependency array to prevent re-renders from clearing the timer
+    }, []);
 
     return (
         <View style={splashStyles.container}>
@@ -64,24 +63,60 @@ function MainTabsComponent() {
             id="MainTabs"
             screenOptions={({ route, navigation }) => ({
                 headerShown: true,
+                headerTitle: '',
+                headerStyle: { backgroundColor: '#1e3c72', elevation: 0, shadowOpacity: 0 },
+                headerShadowVisible: false,
                 headerLeft: () => (
-                    <Image source={require('./assets/logo StreetLightITB.png')} style={{ width: 36, height: 36, marginLeft: 12 }} resizeMode="contain" />
+                    <Image source={require('./assets/logo StreetLightITB_backgroundremoved.png')} style={{ width: 36, height: 36, marginLeft: 12 }} resizeMode="contain" />
                 ),
                 headerRight: () => (
-                    <TouchableOpacity onPress={() => navigation.navigate('Logout')} style={{ marginRight: 12 }}>
-                        <Text style={{ color: '#132147', fontWeight: '600' }}>Keluar</Text>
+                    <TouchableOpacity 
+                        onPress={() => navigation.navigate('Logout')} 
+                        style={{ 
+                            marginRight: 12,
+                            backgroundColor: '#40619f',
+                            paddingHorizontal: 14,
+                            paddingVertical: 6,
+                            borderRadius: 24,
+                        }}
+                    >
+                        <Text style={{ color: '#ffffff', fontWeight: '600' }}>Logout</Text>
                     </TouchableOpacity>
                 ),
-                tabBarIcon: ({ color, size }) => {
+                tabBarIcon: ({ focused, color, size }) => {
                     let name: React.ComponentProps<typeof Ionicons>['name'] = 'home-outline';
-                    if (route.name === 'Home') name = 'home-outline';
-                    else if (route.name === 'Laporan') name = 'document-text-outline';
-                    else if (route.name === 'Riwayat') name = 'time-outline';
+                    if (route.name === 'Home') name = focused ? 'home' : 'home-outline';
+                    else if (route.name === 'Laporan') name = focused ? 'document-text' : 'document-text-outline';
+                    else if (route.name === 'Riwayat') name = focused ? 'time' : 'time-outline';
                     return <Ionicons name={name} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#9be7ff',
-                tabBarInactiveTintColor: '#c3ccd1',
-                tabBarStyle: { backgroundColor: '#0b141a', borderTopColor: 'rgba(255,255,255,0.03)' },
+                tabBarActiveTintColor: '#1e3c72',
+                tabBarInactiveTintColor: '#405987',
+                tabBarStyle: { 
+                    backgroundColor: '#ffffff', 
+                    position: 'absolute', 
+                    margin: 20, 
+                    bottom: 20,
+                    left: 20,
+                    right: 20,
+                    height: 72, 
+                    borderRadius: 24, 
+                    paddingBottom: 12, // Memberikan ruang napas untuk label
+                    paddingTop: 8,     // Memberikan ruang napas untuk ikon
+                    shadowColor: '#000000', 
+                    shadowOffset: { width: 0, height: 4 }, 
+                    shadowOpacity: 0.1, 
+                    shadowRadius: 8, 
+                    elevation: 5, 
+                },
+                tabBarItemStyle: {
+                    justifyContent: 'center',
+                },
+                tabBarLabelStyle: {
+                    fontWeight: '600',
+                    fontSize: 11,
+                    marginTop: 2,
+                }
             })}
         >
             <Tab.Screen name="Home" component={MapScreen} />
@@ -116,11 +151,10 @@ export default function App(): JSX.Element {
     }
  
     if (!authReady) {
-        // Menunggu Firebase cek sesi login yang tersimpan
         return (
             <SafeAreaProvider style={{ flex: 1 }}>
-                <View style={{ flex: 1, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator color="#9be7ff" size="large" />
+                <View style={{ flex: 1, backgroundColor: '#1e3c72', justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator color="#ffffff" size="large" />
                 </View>
             </SafeAreaProvider>
         );

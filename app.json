@@ -10,7 +10,8 @@
       "**/*"
     ],
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "router": {},
@@ -30,7 +31,6 @@
     "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/af4cd9c1-cf70-4d8e-8c8a-54d8525051c4"
-      
     },
     "ios": {}
   }

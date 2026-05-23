@@ -2,41 +2,43 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, Text, SafeAreaView, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../firebaseConfig';
 
 type NodeItem = {
     id: string;
     title: string;
     latitude: number;
     longitude: number;
-    status: 'aktif' | 'hemat' | 'anomali';
+    status: 'aktif' | 'hemat' | 'rusak';
     lastDetected?: string;
 };
 
 const NODES: NodeItem[] = [
-    { id: '1', title: 'Titik 1C - Gedung Rektorat', latitude: -6.928668, longitude: 107.770390, status: 'anomali', lastDetected: '21:03:43' },
-    { id: '2', title: 'Titik 2A - Labtek IA', latitude: -6.929095, longitude: 107.768121, status: 'aktif' },
-    { id: '3', title: 'Titik 3B - Gedung Koica', latitude: -6.927547, longitude: 107.770139, status: 'hemat' },
-    { id: '4', title: 'Titik 4D - GKU 3', latitude: -6.927330, longitude: 107.770032, status: 'aktif' },
-    { id: '5', title: 'Titik 5A - Lapangan Bola', latitude: -6.926131, longitude: 107.768361, status: 'anomali', lastDetected: '20:47:12' },
-    { id: '6', title: 'Titik 6B - IPST', latitude: -6.930191, longitude: 107.770447, status: 'hemat' },
-    { id: '7', title: 'Titik 7C - GKU 2', latitude: -6.929870, longitude: 107.769072, status: 'aktif' },
-    { id: '8', title: 'Titik 8D - Gerbang Utama', latitude: -6.933180, longitude: 107.768315, status: 'aktif' },
-    { id: '9', title: 'Titik 9E - Labtek VA', latitude: -6.931555, longitude: 107.770831, status: 'anomali', lastDetected: '19:30:05' },
-    { id: '10', title: 'Titik 10F - Laboratorium GEM-ITB-CSU', latitude: -6.931358, longitude: 107.768812, status: 'hemat' },
-    { id: '11', title: 'Titik 11A - Asrama ITB Jatinangor TB 3', latitude: -6.927059, longitude: 107.768653, status: 'aktif' },
-    { id: '12', title: 'Titik 12B - WTP', latitude: -6.927073, longitude: 107.766836, status: 'hemat' },
-    { id: '13', title: 'Titik 13C - Asrama ITB Jatinangor TB 5', latitude: -6.928214, longitude: 107.767802, status: 'anomali', lastDetected: '18:22:11' },
-    { id: '14', title: 'Titik 14D - Gedung Rektorat', latitude: -6.928200, longitude: 107.770754, status: 'aktif' },
-    { id: '15', title: 'Titik 15E - GKU 1', latitude: -6.929133, longitude: 107.769919, status: 'hemat' },
-    { id: '16', title: 'Titik 16F - Gedung Koica', latitude: -6.927436, longitude: 107.770063, status: 'aktif' },
-    { id: '17', title: 'Titik 17G - Lapangan Bola', latitude: -6.924819, longitude: 107.767623, status: 'anomali', lastDetected: '17:15:00' },
-    { id: '18', title: 'Titik 18H - Situ 1 ITB Jatinangor', latitude: -6.928986, longitude: 107.767782, status: 'aktif' },
-    { id: '19', title: 'Titik 19I - Asrama ITB Jatinangor TB 4', latitude: -6.927212, longitude: 107.768463, status: 'hemat' },
-    { id: '20', title: 'Titik 20J - Jalan Lingkar Timur', latitude: -6.930966, longitude: 107.770630, status: 'aktif' },
+    { id: '1', title: 'Node-001 - Jalan Utama - Gerbang Utama ITB', latitude: -6.933680, longitude: 107.768339, status: 'aktif' },
+    { id: '2', title: 'Node-002 - Jalan Barat - Area Parkir', latitude: -6.929030, longitude: 107.767977, status: 'hemat' },
+    { id: '3', title: 'Node-003 - Jalan Timur - Gedung Rektorat', latitude: -6.928200, longitude: 107.770754, status: 'rusak', lastDetected: '21:03:43'},
+    { id: '4', title: 'Node-004 - Jalan Selatan - Area Akademik', latitude: -6.930404, longitude: 107.768775, status: 'aktif' },
+    { id: '5', title: 'Node-005 - Area Olahraga', latitude: -6.926872, longitude: 107.769679, status: 'aktif'},
+    { id: '6', title: 'Node-006 - Jalan Belakang - Perpustakaan', latitude: -6.926964, longitude: 107.770474, status: 'hemat' },
+    { id: '7', title: 'Node-007 - GKU 2', latitude: -6.929870, longitude: 107.769072, status: 'aktif' },
+    { id: '8', title: 'Node-008 - Gerbang Utama', latitude: -6.933180, longitude: 107.768315, status: 'aktif' },
+    { id: '9', title: 'Node-009 - Labtek VA', latitude: -6.931555, longitude: 107.770831, status: 'rusak', lastDetected: '19:30:05' },
+    { id: '10', title: 'Node-010 - Laboratorium GEM-ITB-CSU', latitude: -6.931358, longitude: 107.768812, status: 'hemat' },
+    { id: '11', title: 'Node-011 - Asrama ITB Jatinangor TB 3', latitude: -6.927059, longitude: 107.768653, status: 'aktif' },
+    { id: '12', title: 'Node-012 - WTP', latitude: -6.927073, longitude: 107.766836, status: 'hemat' },
+    { id: '13', title: 'Node-013 - Asrama ITB Jatinangor TB 5', latitude: -6.928214, longitude: 107.767802, status: 'rusak', lastDetected: '18:22:11' },
+    { id: '14', title: 'Node-014 - IPST', latitude: -6.930191, longitude: 107.770447, status: 'aktif' },
+    { id: '15', title: 'Node-015 - GKU 1', latitude: -6.929133, longitude: 107.769919, status: 'hemat' },
+    { id: '16', title: 'Node-016 - Gedung Koica', latitude: -6.927436, longitude: 107.770063, status: 'aktif' },
+    { id: '17', title: 'Node-017 - Lapangan Bola', latitude: -6.924819, longitude: 107.767623, status: 'rusak', lastDetected: '17:15:00' },
+    { id: '18', title: 'Node-018 - Situ 1 ITB Jatinangor', latitude: -6.928986, longitude: 107.767782, status: 'aktif' },
+    { id: '19', title: 'Node-019 - Asrama ITB Jatinangor TB 4', latitude: -6.927212, longitude: 107.768463, status: 'hemat' },
+    { id: '20', title: 'Node-020 - Jalan Lingkar Timur', latitude: -6.930966, longitude: 107.770630, status: 'aktif' },
 ];
 
 const MapScreen: React.FC<any> = ({ navigation }) => {
     const [selected, setSelected] = useState<NodeItem | null>(NODES[0]);
+    const userName = auth.currentUser?.displayName || 'User';
 
     const initialRegion = {
         latitude: -6.929315,
@@ -55,18 +57,19 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
 
     const colorFor = (status: NodeItem['status']) => {
         switch (status) {
-            case 'aktif': return '#9be7ff';
+            case 'aktif': return '#00ff1e';
             case 'hemat': return '#ffb86b';
-            case 'anomali': return '#ff6b6b';
-            default: return '#9be7ff';
+            case 'rusak': return '#ff6b6b';
+            default: return '#ffffff';
         }
     };
 
     return (
         <SafeAreaView style={styles.safe}>
             <View style={styles.header}>
-                <Text style={styles.smallHeader}>Dashboard</Text>
-                <Text style={styles.title}>Monitoring Jatinangor</Text>
+                <Text style={styles.headerMeta}></Text>
+                <Text style={styles.smallHeader}>Selamat datang, {userName} !</Text>
+                <Text style={styles.title}>Monitoring ITB Jatinangor</Text>
             </View>
 
             <View style={styles.mapWrap}>
@@ -90,12 +93,12 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
             </View>
 
             <View style={styles.legendRow}>
-                <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#9be7ff' }]} /><Text style={styles.legendText}>Aktif</Text></View>
+                <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#00ff1e' }]} /><Text style={styles.legendText}>Aktif</Text></View>
                 <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#ffb86b' }]} /><Text style={styles.legendText}>Hemat</Text></View>
-                <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#ff6b6b' }]} /><Text style={styles.legendText}>Anomali</Text></View>
+                <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#ff6b6b' }]} /><Text style={styles.legendText}>Rusak</Text></View>
             </View>
 
-            <Text style={styles.sectionTitle}>DETAIL NODE TERPILIH</Text>
+            <Text style={styles.sectionTitle}>DETAIL NODE</Text>
 
             {selected && (
                 <View style={styles.detailCard}>
@@ -108,7 +111,7 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
                             Koordinat: {selected.latitude.toFixed(6)}, {selected.longitude.toFixed(6)}
                         </Text>
                         {selected.lastDetected && (
-                            <Text style={styles.nodeAnom}>Anomali terdeteksi: {selected.lastDetected}</Text>
+                            <Text style={styles.nodeAnom}>Rusak terdeteksi: {selected.lastDetected}</Text>
                         )}
                     </View>
                 </View>
@@ -130,27 +133,28 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#0f1720' },
-    header: { paddingHorizontal: 20, paddingTop: 12 },
-    smallHeader: { color: '#9aa3ad', fontSize: 14 },
-    title: { color: '#e6eef6', fontSize: 26, fontWeight: '700', marginTop: 6 },
-    mapWrap: { height: 300, margin: 16, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.03)' },
-    map: { flex: 1, backgroundColor: '#0b141a' },
+    safe: { flex: 1, backgroundColor: '#1e3c72' },
+    header: { paddingHorizontal: 20, paddingTop: 20 },
+    headerMeta: { color: '#e0e6f0', marginBottom: 4 },
+    smallHeader: { color: '#ffffff', fontSize: 24, fontWeight: '700' },
+    title: { color: '#e0e6f0', fontSize: 16, marginTop: 4 },
+    mapWrap: { height: 300, margin: 16, borderRadius: 18, overflow: 'hidden', borderWidth: 1, borderColor: '#405987' },
+    map: { flex: 1, backgroundColor: '#295196' },
     pin: { width: 18, height: 24, borderRadius: 9, transform: [{ translateY: -6 }], borderWidth: 2, borderColor: '#0b1320' },
-    legendRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 20, marginTop: 6 },
+    legendRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 20 },
     legendItem: { flexDirection: 'row', alignItems: 'center' },
     legendDot: { width: 12, height: 12, borderRadius: 6, marginRight: 8 },
-    legendText: { color: '#c3ccd1' },
-    sectionTitle: { color: '#f1f5f9', fontWeight: '700', marginTop: 14, marginLeft: 20 },
-    detailCard: { flexDirection: 'row', backgroundColor: '#14202a', margin: 16, borderRadius: 12, padding: 12, alignItems: 'center', elevation: 3 },
+    legendText: { color: '#e0e6f0' },
+    sectionTitle: { color: '#ffffff', fontWeight: '700', marginTop: 14, marginLeft: 20 },
+    detailCard: { flexDirection: 'row', backgroundColor: '#40619f', margin: 16, borderRadius: 12, padding: 12, alignItems: 'center', elevation: 3 },
     detailLeft: { width: 56, alignItems: 'center', justifyContent: 'center' },
     bigPin: { width: 40, height: 48, borderRadius: 20, borderWidth: 3, borderColor: '#0b1320' },
     detailRight: { flex: 1, paddingLeft: 12 },
-    nodeTitle: { color: '#e9f0f6', fontWeight: '700', marginBottom: 4 },
-    nodeCoords: { color: '#b9c3c9', fontSize: 12 },
+    nodeTitle: { color: '#ffffff', fontWeight: '700', marginBottom: 4 },
+    nodeCoords: { color: '#e0e6f0', fontSize: 12 },
     nodeAnom: { color: '#ff9aa2', fontSize: 12, marginTop: 6 },
-    reportButton: { marginHorizontal: 20, marginBottom: 18, marginTop: 6, backgroundColor: '#1f2933', paddingVertical: 14, borderRadius: 22, alignItems: 'center' },
-    reportText: { color: '#e6eef6', fontWeight: '700' },
+    reportButton: { marginHorizontal: 20, marginBottom: 18, marginTop: 6, backgroundColor: '#295196', paddingVertical: 14, borderRadius: 22, alignItems: 'center' },
+    reportText: { color: '#ffffff', fontWeight: '700' },
 });
 
 export default MapScreen;

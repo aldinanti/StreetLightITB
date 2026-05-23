@@ -4,10 +4,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
 const NODE_OPTIONS = [
-    'Titik 1C - GKU 2',
-    'Titik 2A - Parkir',
-    'Titik 3B - Jalan Utama',
-    'Titik 4D - Perpustakaan',
+    'Node-001',
+    'Node-002',
+    'Node-003',
+    'Node-004',
+    'Node-005',
+    'Node-006',
+    'Node-007',
+    'Node-008',
+    'Node-009',
+    'Node-010',
+    'Node-011',
+    'Node-012',
+    'Node-013',
+    'Node-014',
+    'Node-015',
+    'Node-016',
+    'Node-017',
+    'Node-018',
+    'Node-019',
+    'Node-020',
 ];
 
 const ISSUE_OPTIONS = [
@@ -19,19 +35,25 @@ const ISSUE_OPTIONS = [
 ];
 
 const ReportScreen: React.FC<any> = ({ navigation }) => {
-    const [node, setNode] = useState<string>(NODE_OPTIONS[0]);
-    const [issue, setIssue] = useState<string>(ISSUE_OPTIONS[0]);
-    const [urgency, setUrgency] = useState<'Tinggi' | 'Sedang' | 'Rendah'>('Sedang');
+    const [node, setNode] = useState<string>('');
+    const [issue, setIssue] = useState<string>('');
     const [notes, setNotes] = useState<string>('');
     const [showNodeOptions, setShowNodeOptions] = useState(false);
     const [showIssueOptions, setShowIssueOptions] = useState(false);
 
     async function submit() {
+        if (!node || !issue || !notes.trim()) {
+            Alert.alert('ALERT', 'Kamu belum isi semua field! Cek lagi ya <3');
+            return;
+        }
+
         try {
             const raw = await AsyncStorage.getItem('streetlight_reports');
             const items = raw ? JSON.parse(raw) : [];
-            items.push({ node, issue, urgency, notes, ts: Date.now() });
+            items.push({ node, issue, notes, ts: Date.now() });
             await AsyncStorage.setItem('streetlight_reports', JSON.stringify(items));
+            setNode('');
+            setIssue('');
             setNotes('');
             Alert.alert('Berhasil', 'Laporan tersimpan');
             navigation.navigate('Riwayat');
@@ -49,7 +71,7 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
                 <View style={styles.field}>
                     <Text style={styles.fieldLabel}>Node Lampu</Text>
                     <TouchableOpacity style={styles.select} onPress={() => setShowNodeOptions(s => !s)}>
-                        <Text style={styles.selectText}>{node}</Text>
+                        <Text style={styles.selectText}>{node || 'Pilih Node Lampu...'}</Text>
                     </TouchableOpacity>
                     {showNodeOptions && (
                         <View style={styles.optionsBox}>
@@ -65,7 +87,7 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
                 <View style={styles.field}>
                     <Text style={styles.fieldLabel}>Jenis Kerusakan</Text>
                     <TouchableOpacity style={styles.select} onPress={() => setShowIssueOptions(s => !s)}>
-                        <Text style={styles.selectText}>{issue}</Text>
+                        <Text style={styles.selectText}>{issue || 'Pilih Jenis Kerusakan...'}</Text>
                     </TouchableOpacity>
                     {showIssueOptions && (
                         <View style={styles.optionsBox}>
@@ -79,19 +101,8 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
                 </View>
 
                 <View style={styles.field}>
-                    <Text style={styles.fieldLabel}>Tingkat Urgensi</Text>
-                    <View style={styles.urgencyRow}>
-                        {(['Tinggi', 'Sedang', 'Rendah'] as const).map(level => (
-                            <TouchableOpacity key={level} style={[styles.urgencyPill, urgency === level && styles.urgencyActive]} onPress={() => setUrgency(level)}>
-                                <Text style={[styles.urgencyText, urgency === level && styles.urgencyTextActive]}>{level}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                <View style={styles.field}>
-                    <Text style={styles.fieldLabel}>Catatan (optional)</Text>
-                    <TextInput value={notes} onChangeText={setNotes} placeholder="Tambahkan descript..." placeholderTextColor="#6b7280" multiline style={[styles.input, styles.textarea]} />
+                    <Text style={styles.fieldLabel}>Catatan</Text>
+                    <TextInput value={notes} onChangeText={setNotes} placeholder="Deskripsikan detail kerusakan di sini..." placeholderTextColor="#ffffff" multiline style={[styles.input, styles.textarea]} />
                 </View>
 
                 <TouchableOpacity style={styles.submitBtn} onPress={submit} activeOpacity={0.85}>
@@ -106,26 +117,21 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#0f1720' },
+    safe: { flex: 1, backgroundColor: '#1e3c72' },
     container: { padding: 20, paddingBottom: 40 },
-    headerMeta: { color: '#9aa3ad', marginBottom: 4 },
-    header: { color: '#e6eef6', fontSize: 26, fontWeight: '700', marginBottom: 12 },
+    headerMeta: { color: '#e0e6f0', marginBottom: 4 },
+    header: { color: '#ffffff', fontSize: 24, fontWeight: '700', marginBottom: 12 },
     field: { marginTop: 12 },
-    fieldLabel: { color: '#c7d2da', marginBottom: 8 },
-    select: { backgroundColor: '#0b141a', borderWidth: 1, borderColor: '#20313a', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10 },
-    selectText: { color: '#e6eef6' },
-    optionsBox: { backgroundColor: '#0b141a', borderRadius: 10, marginTop: 8, borderWidth: 1, borderColor: '#21303a', overflow: 'hidden' },
-    optionItem: { paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)' },
-    optionText: { color: '#cbd6dc' },
-    urgencyRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
-    urgencyPill: { flex: 1, marginHorizontal: 4, paddingVertical: 10, borderRadius: 20, backgroundColor: '#14202a', alignItems: 'center' },
-    urgencyActive: { backgroundColor: '#ff6b6b' },
-    urgencyText: { color: '#c3ccd1' },
-    urgencyTextActive: { color: '#fff', fontWeight: '700' },
-    input: { backgroundColor: '#0b141a', borderWidth: 1, borderColor: '#20313a', padding: 12, borderRadius: 10, color: '#e6eef6' },
+    fieldLabel: { color: '#e0e6f0', marginBottom: 8 },
+    select: { backgroundColor: '#40619f', borderWidth: 1, borderColor: '#405987', paddingVertical: 12, paddingHorizontal: 14, borderRadius: 10 },
+    selectText: { color: '#ffffff' },
+    optionsBox: { backgroundColor: '#295196', borderRadius: 10, marginTop: 8, borderWidth: 1, borderColor: '#405987', overflow: 'hidden' },
+    optionItem: { paddingVertical: 12, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#405987' },
+    optionText: { color: '#ffffff' },
+    input: { backgroundColor: '#40619f', borderWidth: 1, borderColor: '#405987', padding: 12, borderRadius: 10, color: '#ffffff' },
     textarea: { height: 110, textAlignVertical: 'top', marginTop: 8 },
-    submitBtn: { marginTop: 18, backgroundColor: '#1f2933', paddingVertical: 14, borderRadius: 22, alignItems: 'center' },
-    submitText: { color: '#e6eef6', fontWeight: '700' },
+    submitBtn: { marginTop: 18, backgroundColor: '#295196', paddingVertical: 14, borderRadius: 22, alignItems: 'center' },
+    submitText: { color: '#ffffff', fontWeight: '700' },
 });
 
 export default ReportScreen;

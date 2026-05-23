@@ -1,18 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { SafeAreaView, View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type Report = { node?: string; issue?: string; urgency?: string; notes?: string; ts: number };
 
 const SAMPLE_ANOMALIES = [
-    { id: 'a1', title: 'Anomali - Titik 1C GKU 2', desc: 'Lampu terdeteksi meredup tanpa alasan.', ts: Date.now() - 1000 * 60 * 20 },
-    { id: 'a2', title: 'Hemat Energi - Titik 3B Asrama', desc: 'Mode hemat aktif, namun tidak berespon pada pergerakan.', ts: Date.now() - 1000 * 60 * 40 },
+    { id: 'a1', title: 'Rusak - Node-003 - Jalan Timur - Gedung Rektorat', desc: 'Lampu terdeteksi meredup tanpa alasan.', ts: Date.now() - 1000 * 60 * 20 },
+    { id: 'a2', title: 'Hemat - Node-002 - Jalan Barat - Area Parkir', desc: 'Mode hemat aktif, namun tidak berespon pada pergerakan.', ts: Date.now() - 1000 * 60 * 40 },
 ];
 
 const HistoryScreen: React.FC = () => {
     const [reports, setReports] = useState<Report[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showPicker, setShowPicker] = useState(false);
 
+    <TextInput
+        style={styles.searchInput}
+        placeholder="Cari ID atau pilih tanggal..."
+        placeholderTextColor="#e0e6f088"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        returnKeyType="search"
+        blurOnSubmit={false}
+    />
     useEffect(() => {
         load();
         const id = setInterval(load, 3000);
@@ -41,13 +53,16 @@ const HistoryScreen: React.FC = () => {
     );
 
     const renderReport = ({ item, index }: { item: Report; index: number }) => {
-        const idLabel = `Laporan #LAP-2026-${String(index + 1).padStart(3, '0')}`;
-        const status = index % 2 === 0 ? 'SELESAI' : 'DALAM PROSES';
+        // Hitung nomor urut asli relatif terhadap daftar keseluruhan agar ID tetap stabil saat difilter
+        const originalListIndex = reports.indexOf(item);
+        const reportNumber = reports.length - originalListIndex;
+        const idLabel = `Laporan #LAP-2026-${String(reportNumber).padStart(3, '0')}`;
+        const status = originalListIndex % 2 === 0 ? 'SELESAI' : 'DALAM PROSES';
         const statusStyle = status === 'SELESAI' ? styles.badgeDone : styles.badgeProgress;
         return (
             <View style={styles.reportCard}>
                 <View style={styles.reportLeft}>
-                    <Ionicons name={status === 'SELESAI' ? 'checkmark-circle' : 'time-outline'} size={20} color={status === 'SELESAI' ? '#9be7ff' : '#ffb86b'} />
+                    <Ionicons name={status === 'SELESAI' ? 'checkmark-circle' : 'time-outline'} size={20} color={status === 'SELESAI' ? '#2a5298' : '#ffb86b'} />
                 </View>
                 <View style={styles.reportMiddle}>
                     <Text style={styles.reportTitle}>{idLabel}</Text>
@@ -62,11 +77,44 @@ const HistoryScreen: React.FC = () => {
         );
     };
 
+    const filteredReports = reports.filter(r => {
+        const date = new Date(r.ts);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const dateStr = `${day}/${month}/${year}`;
+
+        const enrichedReports = reports.map((r, i) => ({
+            ...r,
+            reportNumber: reports.length - i,
+        }));
+        const originalListIndex = reports.indexOf(r);
+        const reportNumber = reports.length - originalListIndex;
+        const idLabel = `Laporan #LAP-2026-${String(reportNumber).padStart(3, '0')}`;
+        
+        const query = searchQuery.toLowerCase();
+        
+        return idLabel.toLowerCase().includes(query) || dateStr.includes(query);
+    });
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowPicker(false);
+        if (selectedDate) {
+            // Gunakan format manual yang sama (DD/MM/YYYY) agar filter sinkron
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const year = selectedDate.getFullYear();
+            const dateStr = `${day}/${month}/${year}`;
+            setSearchQuery(dateStr);
+        }
+    };
+
     return (
         <SafeAreaView style={styles.safe}>
             <FlatList
-                ListHeaderComponent={() => (
+                ListHeaderComponent={
                     <View style={styles.headerWrap}>
+                        <Text style={styles.headerMeta}></Text>
                         <Text style={styles.header}>Riwayat & Notifikasi</Text>
 
                         <Text style={styles.sectionLabel}>NOTIFIKASI ANOMALI</Text>
@@ -75,40 +123,88 @@ const HistoryScreen: React.FC = () => {
                         ))}
 
                         <Text style={styles.sectionLabel}>RIWAYAT LAPORAN SAYA</Text>
+
+                        <View style={styles.searchBar}>
+                            <Ionicons name="search-outline" size={18} color="#e0e6f0" style={{ marginRight: 8 }} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Cari ID atau pilih tanggal..."
+                                placeholderTextColor="#e0e6f088"
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                returnKeyType="search"
+                                blurOnSubmit={false}
+                            />
+                            {searchQuery.length > 0 && (
+                                <TouchableOpacity onPress={() => setSearchQuery('')} style={{ marginRight: 10 }}>
+                                    <Ionicons name="close-circle" size={18} color="#e0e6f0" />
+                                </TouchableOpacity>
+                            )}
+                            <TouchableOpacity onPress={() => setShowPicker(true)}>
+                                <Ionicons name="calendar-outline" size={22} color="#ffffff" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                )}
-                data={reports}
-                keyExtractor={(item, idx) => String(idx)}
+                }
+                data={filteredReports}
+                keyExtractor={(item, idx) => item.ts ? String(item.ts) : String(idx)}
                 renderItem={renderReport}
                 contentContainerStyle={styles.container}
                 ListEmptyComponent={<Text style={styles.empty}>Belum ada laporan</Text>}
             />
+
+            {showPicker && (
+                <View style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                }}>
+                <View style={{ backgroundColor: '#fff', borderRadius: 12 }}>
+                    <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={onDateChange}
+                    />
+                </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 };
 
+
+
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: '#0f1720' },
-    container: { padding: 16, paddingBottom: 40 },
+    safe: { flex: 1, backgroundColor: '#1e3c72' },
+    container: { padding: 20, paddingBottom: 40 },
+    headerMeta: { color: '#e0e6f0', marginBottom: 4 },
     headerWrap: { paddingBottom: 8 },
-    header: { color: '#e6eef6', fontSize: 24, fontWeight: '700', marginBottom: 12 },
-    sectionLabel: { color: '#cbd6dc', fontWeight: '700', marginTop: 6, marginBottom: 8 },
-    anomCard: { flexDirection: 'row', backgroundColor: '#14202a', borderRadius: 10, padding: 12, alignItems: 'center' },
+    header: { color: '#ffffff', fontSize: 24, fontWeight: '700', marginBottom: 12 },
+    sectionLabel: { color: '#e0e6f0', fontWeight: '700', marginTop: 6, marginBottom: 8 },
+    searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#40619f', borderRadius: 12, paddingHorizontal: 12, height: 48, marginBottom: 16, borderWidth: 1, borderColor: '#405987' },
+    searchInput: { flex: 1, color: '#ffffff', fontSize: 14, paddingVertical: 0 },
+    anomCard: { flexDirection: 'row', backgroundColor: '#40619f', borderRadius: 10, padding: 12, alignItems: 'center' },
     anomAccent: { width: 6, height: '100%', backgroundColor: '#ff6b6b', borderRadius: 4, marginRight: 10 },
-    anomTitle: { color: '#e9f0f6', fontWeight: '700', marginBottom: 6 },
-    anomDesc: { color: '#cbd6dc', fontSize: 13 },
-    anomTs: { color: '#9aa3ad', marginTop: 8, fontSize: 12 },
-    reportCard: { flexDirection: 'row', backgroundColor: '#14202a', borderRadius: 10, padding: 12, alignItems: 'center', marginBottom: 12 },
+    anomTitle: { color: '#ffffff', fontWeight: '700', marginBottom: 6 },
+    anomDesc: { color: '#e0e6f0', fontSize: 13 },
+    anomTs: { color: '#ffffff', opacity: 0.6, marginTop: 8, fontSize: 12 },
+    reportCard: { flexDirection: 'row', backgroundColor: '#40619f', borderRadius: 10, padding: 12, alignItems: 'center', marginBottom: 12 },
     reportLeft: { width: 36, alignItems: 'center', justifyContent: 'center' },
     reportMiddle: { flex: 1, paddingHorizontal: 8 },
     reportRight: { width: 110, alignItems: 'flex-end' },
-    reportTitle: { color: '#e9f0f6', fontWeight: '700' },
-    reportSub: { color: '#b9c3c9', marginTop: 6, fontSize: 12 },
+    reportTitle: { color: '#ffffff', fontWeight: '700' },
+    reportSub: { color: '#e0e6f0', marginTop: 6, fontSize: 12 },
     statusBadge: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16 },
     badgeDone: { backgroundColor: '#d0f7ff' },
     badgeProgress: { backgroundColor: '#ffe7c7' },
     statusText: { fontWeight: '700', color: '#0b141a' },
-    empty: { color: '#9aa3ad', textAlign: 'center', marginTop: 20 },
+    empty: { color: '#e0e6f0', textAlign: 'center', marginTop: 20 },
 });
 
 export default HistoryScreen;

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
-import { auth } from '../firebaseConfig';
+import { getStoredUser } from '../authService';
+import { getNodes } from '../apiService';
 
 type NodeItem = {
     id: string;
@@ -11,34 +12,41 @@ type NodeItem = {
     longitude: number;
     status: 'aktif' | 'hemat' | 'rusak';
     lastDetected?: string;
+    lux?: number | null;
+    brightnessPwm?: number | null;
+    pirActive?: boolean | null;
+    temperature?: number | null;
 };
 
-const NODES: NodeItem[] = [
-    { id: '1', title: 'Node-001 - Jalan Utama - Gerbang Utama ITB', latitude: -6.933680, longitude: 107.768339, status: 'aktif' },
-    { id: '2', title: 'Node-002 - Jalan Barat - Area Parkir', latitude: -6.929030, longitude: 107.767977, status: 'hemat' },
-    { id: '3', title: 'Node-003 - Jalan Timur - Gedung Rektorat', latitude: -6.928200, longitude: 107.770754, status: 'rusak', lastDetected: '21:03:43'},
-    { id: '4', title: 'Node-004 - Jalan Selatan - Area Akademik', latitude: -6.930404, longitude: 107.768775, status: 'aktif' },
-    { id: '5', title: 'Node-005 - Area Olahraga', latitude: -6.926872, longitude: 107.769679, status: 'aktif'},
-    { id: '6', title: 'Node-006 - Jalan Belakang - Perpustakaan', latitude: -6.926964, longitude: 107.770474, status: 'hemat' },
-    { id: '7', title: 'Node-007 - GKU 2', latitude: -6.929870, longitude: 107.769072, status: 'aktif' },
-    { id: '8', title: 'Node-008 - Gerbang Utama', latitude: -6.933180, longitude: 107.768315, status: 'aktif' },
-    { id: '9', title: 'Node-009 - Labtek VA', latitude: -6.931555, longitude: 107.770831, status: 'rusak', lastDetected: '19:30:05' },
-    { id: '10', title: 'Node-010 - Laboratorium GEM-ITB-CSU', latitude: -6.931358, longitude: 107.768812, status: 'hemat' },
-    { id: '11', title: 'Node-011 - Asrama ITB Jatinangor TB 3', latitude: -6.927059, longitude: 107.768653, status: 'aktif' },
-    { id: '12', title: 'Node-012 - WTP', latitude: -6.927073, longitude: 107.766836, status: 'hemat' },
-    { id: '13', title: 'Node-013 - Asrama ITB Jatinangor TB 5', latitude: -6.928214, longitude: 107.767802, status: 'rusak', lastDetected: '18:22:11' },
-    { id: '14', title: 'Node-014 - IPST', latitude: -6.930191, longitude: 107.770447, status: 'aktif' },
-    { id: '15', title: 'Node-015 - GKU 1', latitude: -6.929133, longitude: 107.769919, status: 'hemat' },
-    { id: '16', title: 'Node-016 - Gedung Koica', latitude: -6.927436, longitude: 107.770063, status: 'aktif' },
-    { id: '17', title: 'Node-017 - Lapangan Bola', latitude: -6.924819, longitude: 107.767623, status: 'rusak', lastDetected: '17:15:00' },
-    { id: '18', title: 'Node-018 - Situ 1 ITB Jatinangor', latitude: -6.928986, longitude: 107.767782, status: 'aktif' },
-    { id: '19', title: 'Node-019 - Asrama ITB Jatinangor TB 4', latitude: -6.927212, longitude: 107.768463, status: 'hemat' },
-    { id: '20', title: 'Node-020 - Jalan Lingkar Timur', latitude: -6.930966, longitude: 107.770630, status: 'aktif' },
+const FALLBACK_NODES: NodeItem[] = [
+    { id: 'NODE-001', title: 'NODE-001 - Jalan Utama - Gerbang Utama ITB', latitude: -6.933680, longitude: 107.768339, status: 'aktif' },
+    { id: 'NODE-002', title: 'NODE-002 - Jalan Barat - Area Parkir', latitude: -6.929030, longitude: 107.767977, status: 'hemat' },
+    { id: 'NODE-003', title: 'NODE-003 - Jalan Timur - Gedung Rektorat', latitude: -6.928200, longitude: 107.770754, status: 'rusak', lastDetected: '21:03:43'},
+    { id: 'NODE-004', title: 'NODE-004 - Jalan Selatan - Area Akademik', latitude: -6.930404, longitude: 107.768775, status: 'aktif' },
+    { id: 'NODE-005', title: 'NODE-005 - Area Olahraga', latitude: -6.926872, longitude: 107.769679, status: 'aktif'},
+    { id: 'NODE-006', title: 'NODE-006 - Jalan Belakang - Perpustakaan', latitude: -6.926964, longitude: 107.770474, status: 'hemat' },
+    { id: 'NODE-007', title: 'NODE-007 - GKU 2', latitude: -6.929870, longitude: 107.769072, status: 'aktif' },
+    { id: 'NODE-008', title: 'NODE-008 - Gerbang Utama', latitude: -6.933180, longitude: 107.768315, status: 'aktif' },
+    { id: 'NODE-009', title: 'NODE-009 - Labtek VA', latitude: -6.931555, longitude: 107.770831, status: 'rusak', lastDetected: '19:30:05' },
+    { id: 'NODE-010', title: 'NODE-010 - Laboratorium GEM-ITB-CSU', latitude: -6.931358, longitude: 107.768812, status: 'hemat' },
+    { id: 'NODE-011', title: 'NODE-011 - Asrama ITB Jatinangor TB 3', latitude: -6.927059, longitude: 107.768653, status: 'aktif' },
+    { id: 'NODE-012', title: 'NODE-012 - WTP', latitude: -6.927073, longitude: 107.766836, status: 'hemat' },
+    { id: 'NODE-013', title: 'NODE-013 - Asrama ITB Jatinangor TB 5', latitude: -6.928214, longitude: 107.767802, status: 'rusak', lastDetected: '18:22:11' },
+    { id: 'NODE-014', title: 'NODE-014 - IPST', latitude: -6.930191, longitude: 107.770447, status: 'aktif' },
+    { id: 'NODE-015', title: 'NODE-015 - GKU 1', latitude: -6.929133, longitude: 107.769919, status: 'hemat' },
+    { id: 'NODE-016', title: 'NODE-016 - Gedung Koica', latitude: -6.927436, longitude: 107.770063, status: 'aktif' },
+    { id: 'NODE-017', title: 'NODE-017 - Lapangan Bola', latitude: -6.924819, longitude: 107.767623, status: 'rusak', lastDetected: '17:15:00' },
+    { id: 'NODE-018', title: 'NODE-018 - Situ 1 ITB Jatinangor', latitude: -6.928986, longitude: 107.767782, status: 'aktif' },
+    { id: 'NODE-019', title: 'NODE-019 - Asrama ITB Jatinangor TB 4', latitude: -6.927212, longitude: 107.768463, status: 'hemat' },
+    { id: 'NODE-020', title: 'NODE-020 - Jalan Lingkar Timur', latitude: -6.930966, longitude: 107.770630, status: 'aktif' },
 ];
 
 const MapScreen: React.FC<any> = ({ navigation }) => {
-    const [selected, setSelected] = useState<NodeItem | null>(NODES[0]);
-    const userName = auth.currentUser?.displayName || 'User';
+    const [nodes, setNodes] = useState<NodeItem[]>(FALLBACK_NODES);
+    const [selected, setSelected] = useState<NodeItem | null>(FALLBACK_NODES[0]);
+    const [userName, setUserName] = useState('User');
+    const [loadingNodes, setLoadingNodes] = useState(false);
+    const [nodeError, setNodeError] = useState('');
 
     const initialRegion = {
         latitude: -6.929315,
@@ -54,6 +62,70 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
             try { mapRef.current.animateToRegion(initialRegion, 800); } catch (e) { /* ignore */ }
         }
     }, []);
+
+    useEffect(() => {
+        let mounted = true;
+
+        async function loadUserAndNodes() {
+            try {
+                const user = await getStoredUser();
+                if (mounted && user?.display_name) {
+                    setUserName(user.display_name);
+                }
+            } catch (e) {
+                // User name is cosmetic; keep default when storage is unavailable.
+            }
+
+            setLoadingNodes(true);
+            setNodeError('');
+            try {
+                const data = await getNodes();
+                if (!mounted) return;
+
+                const mapped = data
+                    .filter((item: any) => Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude)))
+                    .map((item: any) => ({
+                        id: item.id,
+                        title: `${item.id} - ${item.location_name || item.zone || 'Tanpa lokasi'}`,
+                        latitude: Number(item.latitude),
+                        longitude: Number(item.longitude),
+                        status: normalizeStatus(item.status),
+                        lastDetected: item.last_seen_at ? new Date(item.last_seen_at).toLocaleTimeString() : undefined,
+                        lux: item.lux ?? null,
+                        brightnessPwm: item.brightness_pwm ?? null,
+                        pirActive: item.pir_active ?? null,
+                        temperature: item.temperature ?? null,
+                    }));
+
+                if (mapped.length > 0) {
+                    setNodes(mapped);
+                    setSelected(mapped[0]);
+                }
+            } catch (e: any) {
+                if (mounted) {
+                    setNodeError(e.message || 'Gagal memuat data node dari backend.');
+                }
+            } finally {
+                if (mounted) {
+                    setLoadingNodes(false);
+                }
+            }
+        }
+
+        loadUserAndNodes();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const normalizeStatus = (status?: string): NodeItem['status'] => {
+        const value = String(status || '').toUpperCase();
+
+        if (value === 'BROKEN' || value === 'OFF') return 'rusak';
+        if (value === 'ECO') return 'hemat';
+        return 'aktif';
+    };
 
     const colorFor = (status: NodeItem['status']) => {
         switch (status) {
@@ -80,7 +152,7 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
                     showsUserLocation={false}
                     toolbarEnabled={false}
                 >
-                    {NODES.map(n => (
+                    {nodes.map(n => (
                         <Marker
                             key={n.id}
                             coordinate={{ latitude: n.latitude, longitude: n.longitude }}
@@ -91,6 +163,14 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
                     ))}
                 </MapView>
             </View>
+
+            {loadingNodes && (
+                <View style={styles.loadingRow}>
+                    <ActivityIndicator color="#ffffff" size="small" />
+                    <Text style={styles.loadingText}>Memuat node backend...</Text>
+                </View>
+            )}
+            {!!nodeError && <Text style={styles.errorText}>{nodeError}</Text>}
 
             <View style={styles.legendRow}>
                 <View style={styles.legendItem}><View style={[styles.legendDot, { backgroundColor: '#00ff1e' }]} /><Text style={styles.legendText}>Aktif</Text></View>
@@ -112,6 +192,12 @@ const MapScreen: React.FC<any> = ({ navigation }) => {
                         </Text>
                         {selected.lastDetected && (
                             <Text style={styles.nodeAnom}>Rusak terdeteksi: {selected.lastDetected}</Text>
+                        )}
+                        <Text style={styles.nodeMetric}>
+                            Lux: {selected.lux ?? '-'} | PWM: {selected.brightnessPwm ?? '-'} | PIR: {selected.pirActive == null ? '-' : selected.pirActive ? 'Aktif' : 'Tidak aktif'}
+                        </Text>
+                        {selected.temperature != null && (
+                            <Text style={styles.nodeMetric}>Suhu: {selected.temperature} C</Text>
                         )}
                     </View>
                 </View>
@@ -145,6 +231,9 @@ const styles = StyleSheet.create({
     legendItem: { flexDirection: 'row', alignItems: 'center' },
     legendDot: { width: 12, height: 12, borderRadius: 6, marginRight: 8 },
     legendText: { color: '#e0e6f0' },
+    loadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: -4, marginBottom: 8 },
+    loadingText: { color: '#e0e6f0', marginLeft: 8, fontSize: 12 },
+    errorText: { color: '#ffb4b4', textAlign: 'center', marginHorizontal: 20, marginBottom: 8, fontSize: 12 },
     sectionTitle: { color: '#ffffff', fontWeight: '700', marginTop: 14, marginLeft: 20 },
     detailCard: { flexDirection: 'row', backgroundColor: '#40619f', margin: 16, borderRadius: 12, padding: 12, alignItems: 'center', elevation: 3 },
     detailLeft: { width: 56, alignItems: 'center', justifyContent: 'center' },
@@ -153,6 +242,7 @@ const styles = StyleSheet.create({
     nodeTitle: { color: '#ffffff', fontWeight: '700', marginBottom: 4 },
     nodeCoords: { color: '#e0e6f0', fontSize: 12 },
     nodeAnom: { color: '#ff9aa2', fontSize: 12, marginTop: 6 },
+    nodeMetric: { color: '#e0e6f0', fontSize: 12, marginTop: 6 },
     reportButton: { marginHorizontal: 20, marginBottom: 18, marginTop: 6, backgroundColor: '#295196', paddingVertical: 14, borderRadius: 22, alignItems: 'center' },
     reportText: { color: '#ffffff', fontWeight: '700' },
 });

@@ -53,15 +53,11 @@ export default function RegisterScreen({ navigation }: any) {
                 { text: 'OK', onPress: () => navigation.navigate('Login') }
             ]);
         } catch (e: any) {
-            let msg = 'Pendaftaran gagal. Coba lagi.';
-            if (e.code === 'auth/email-already-in-use') {
+            let msg = e.message || 'Pendaftaran gagal. Coba lagi.';
+            if (e.status === 409) {
                 msg = 'Email sudah terdaftar.';
-            } else if (e.code === 'auth/invalid-email') {
-                msg = 'Format email tidak valid.';
-            } else if (e.code === 'auth/weak-password') {
-                msg = 'Password terlalu lemah.';
-            } else if (e.code === 'auth/network-request-failed') {
-                msg = 'Tidak ada koneksi internet.';
+            } else if (e.status === 400) {
+                msg = 'Data pendaftaran tidak valid.';
             }
             Alert.alert('Pendaftaran Gagal', msg);
         } finally {

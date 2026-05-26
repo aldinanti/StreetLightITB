@@ -42,14 +42,10 @@ export default function LoginScreen({ navigation }: any) {
             navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
         } catch (e: any) {
             let msg = 'Login gagal. Coba lagi.';
-            if (e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found') {
+            if (e.status === 401 || e.status === 400) {
                 msg = 'Email atau password salah.';
-            } else if (e.code === 'auth/invalid-email') {
-                msg = 'Format email tidak valid.';
-            } else if (e.code === 'auth/too-many-requests') {
-                msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
-            } else if (e.code === 'auth/network-request-failed') {
-                msg = 'Tidak ada koneksi internet.';
+            } else if (e.message) {
+                msg = e.message;
             }
             Alert.alert('Login Gagal', msg);
         } finally {

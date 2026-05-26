@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView, View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { getAdminReports, getMyReports } from '../apiService';
+import { getStoredUser } from '../authService';
 
-type Report = { node?: string; issue?: string; urgency?: string; notes?: string; ts: number };
+type Report = { id?: number; node?: string; issue?: string; urgency?: string; notes?: string; status?: string; ts: number };
 
 const SAMPLE_ANOMALIES = [
     { id: 'a1', title: 'Rusak - Node-003 - Jalan Timur - Gedung Rektorat', desc: 'Lampu terdeteksi meredup tanpa alasan.', ts: Date.now() - 1000 * 60 * 20 },
@@ -16,15 +17,6 @@ const HistoryScreen: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showPicker, setShowPicker] = useState(false);
 
-    <TextInput
-        style={styles.searchInput}
-        placeholder="Cari ID atau pilih tanggal..."
-        placeholderTextColor="#e0e6f088"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        returnKeyType="search"
-        blurOnSubmit={false}
-    />
     useEffect(() => {
         load();
         const id = setInterval(load, 3000);
@@ -33,9 +25,30 @@ const HistoryScreen: React.FC = () => {
 
     async function load() {
         try {
-            const raw = await AsyncStorage.getItem('streetlight_reports');
-            const arr: Report[] = raw ? JSON.parse(raw) : [];
-            setReports(arr.slice().reverse());
+            const user = await getStoredUser();
+
+            if (user?.role === 'ADMIN') {
+                const backendReports = await getAdminReports({ limit: 50 });
+                setReports(backendReports.map((item: any) => ({
+                    id: item.id,
+                    node: item.node_id,
+                    issue: item.issue_type,
+                    notes: item.description,
+                    status: item.status,
+                    ts: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+                })));
+                return;
+            }
+
+            const myReports = await getMyReports({ limit: 50 });
+            setReports(myReports.map((item: any) => ({
+                id: item.id,
+                node: item.node_id,
+                issue: item.issue_type,
+                notes: item.description,
+                status: item.status,
+                ts: item.created_at ? new Date(item.created_at).getTime() : Date.now(),
+            })));
         } catch (e) {
             setReports([]);
         }
@@ -56,21 +69,22 @@ const HistoryScreen: React.FC = () => {
         // Hitung nomor urut asli relatif terhadap daftar keseluruhan agar ID tetap stabil saat difilter
         const originalListIndex = reports.indexOf(item);
         const reportNumber = reports.length - originalListIndex;
-        const idLabel = `Laporan #LAP-2026-${String(reportNumber).padStart(3, '0')}`;
-        const status = originalListIndex % 2 === 0 ? 'SELESAI' : 'DALAM PROSES';
-        const statusStyle = status === 'SELESAI' ? styles.badgeDone : styles.badgeProgress;
+        const idLabel = item.id ? `Laporan #${item.id}` : `Laporan #LAP-2026-${String(reportNumber).padStart(3, '0')}`;
+        const status = item.status || 'PENDING';
+        const statusText = status === 'RESOLVED' ? 'SELESAI' : status === 'IN_PROGRESS' ? 'DALAM PROSES' : 'MENUNGGU';
+        const statusStyle = status === 'RESOLVED' ? styles.badgeDone : styles.badgeProgress;
         return (
             <View style={styles.reportCard}>
                 <View style={styles.reportLeft}>
-                    <Ionicons name={status === 'SELESAI' ? 'checkmark-circle' : 'time-outline'} size={20} color={status === 'SELESAI' ? '#2a5298' : '#ffb86b'} />
+                    <Ionicons name={status === 'RESOLVED' ? 'checkmark-circle' : 'time-outline'} size={20} color={status === 'RESOLVED' ? '#2a5298' : '#ffb86b'} />
                 </View>
                 <View style={styles.reportMiddle}>
                     <Text style={styles.reportTitle}>{idLabel}</Text>
-                    <Text style={styles.reportSub}>{item.node || 'Titik 4A'}, {item.notes ? item.notes.slice(0, 40) : '—'}</Text>
+                    <Text style={styles.reportSub}>{item.node || 'Titik 4A'}, {item.notes ? item.notes.slice(0, 40) : '-'}</Text>
                 </View>
                 <View style={styles.reportRight}>
                     <View style={[styles.statusBadge, statusStyle]}>
-                        <Text style={styles.statusText}>{status}</Text>
+                        <Text style={styles.statusText}>{statusText}</Text>
                     </View>
                 </View>
             </View>
@@ -84,13 +98,9 @@ const HistoryScreen: React.FC = () => {
         const year = date.getFullYear();
         const dateStr = `${day}/${month}/${year}`;
 
-        const enrichedReports = reports.map((r, i) => ({
-            ...r,
-            reportNumber: reports.length - i,
-        }));
         const originalListIndex = reports.indexOf(r);
         const reportNumber = reports.length - originalListIndex;
-        const idLabel = `Laporan #LAP-2026-${String(reportNumber).padStart(3, '0')}`;
+        const idLabel = r.id ? `Laporan #${r.id}` : `Laporan #LAP-2026-${String(reportNumber).padStart(3, '0')}`;
         
         const query = searchQuery.toLowerCase();
         

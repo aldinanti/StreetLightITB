@@ -5,8 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebaseConfig';
+import { refreshCurrentUser } from './authService';
 
 import MapScreen from './screens/MapScreen';
 import ReportScreen from './screens/ReportScreen';
@@ -134,12 +133,17 @@ export default function App(): JSX.Element {
     useEffect(() => {
         if (showSplash) return;
  
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        let mounted = true;
+
+        refreshCurrentUser().then((user) => {
+            if (!mounted) return;
             setInitialRoute(user ? 'MainTabs' : 'Login');
             setAuthReady(true);
         });
  
-        return () => unsubscribe();
+        return () => {
+            mounted = false;
+        };
     }, [showSplash]);
  
     if (showSplash) {

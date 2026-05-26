@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { createReport, getNodes } from '../apiService';
 
 const NODE_OPTIONS = [
-    'Node-001',
-    'Node-002',
-    'Node-003',
-    'Node-004',
-    'Node-005',
-    'Node-006',
-    'Node-007',
-    'Node-008',
-    'Node-009',
-    'Node-010',
-    'Node-011',
-    'Node-012',
-    'Node-013',
-    'Node-014',
-    'Node-015',
-    'Node-016',
-    'Node-017',
-    'Node-018',
-    'Node-019',
-    'Node-020',
+    'NODE-001',
+    'NODE-002',
+    'NODE-003',
+    'NODE-004',
+    'NODE-005',
+    'NODE-006',
+    'NODE-007',
+    'NODE-008',
+    'NODE-009',
+    'NODE-010',
+    'NODE-011',
+    'NODE-012',
+    'NODE-013',
+    'NODE-014',
+    'NODE-015',
+    'NODE-016',
+    'NODE-017',
+    'NODE-018',
+    'NODE-019',
+    'NODE-020',
 ];
 
 const ISSUE_OPTIONS = [
@@ -38,8 +38,35 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
     const [node, setNode] = useState<string>('');
     const [issue, setIssue] = useState<string>('');
     const [notes, setNotes] = useState<string>('');
+    const [nodeOptions, setNodeOptions] = useState<string[]>(NODE_OPTIONS);
     const [showNodeOptions, setShowNodeOptions] = useState(false);
     const [showIssueOptions, setShowIssueOptions] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        let mounted = true;
+
+        async function loadNodes() {
+            try {
+                const data = await getNodes();
+                const ids = data.map((item: any) => item.id).filter(Boolean);
+
+                if (mounted && ids.length > 0) {
+                    setNodeOptions(ids);
+                }
+            } catch (e) {
+                // Keep static node options when backend nodes cannot be loaded.
+            }
+        }
+
+        loadNodes();
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    const issueToType = (value: string) => value.toLowerCase().replace(/\s*\/\s*/g, '_').replace(/\s+/g, '_');
 
     async function submit() {
         if (!node || !issue || !notes.trim()) {
@@ -47,18 +74,24 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
             return;
         }
 
+        setLoading(true);
         try {
-            const raw = await AsyncStorage.getItem('streetlight_reports');
-            const items = raw ? JSON.parse(raw) : [];
-            items.push({ node, issue, notes, ts: Date.now() });
-            await AsyncStorage.setItem('streetlight_reports', JSON.stringify(items));
+            await createReport({
+                nodeId: node,
+                issueType: issueToType(issue),
+                severity: 'MEDIUM',
+                description: notes.trim(),
+            });
+
             setNode('');
             setIssue('');
             setNotes('');
-            Alert.alert('Berhasil', 'Laporan tersimpan');
+            Alert.alert('Berhasil', 'Laporan terkirim ke backend.');
             navigation.navigate('Riwayat');
         } catch (e: any) {
-            Alert.alert('Error', String(e));
+            Alert.alert('Error', e.message || 'Gagal mengirim laporan.');
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -75,7 +108,7 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
                     </TouchableOpacity>
                     {showNodeOptions && (
                         <View style={styles.optionsBox}>
-                            {NODE_OPTIONS.map(n => (
+                            {nodeOptions.map(n => (
                                 <TouchableOpacity key={n} style={styles.optionItem} onPress={() => { setNode(n); setShowNodeOptions(false); }}>
                                     <Text style={styles.optionText}>{n}</Text>
                                 </TouchableOpacity>
@@ -105,10 +138,15 @@ const ReportScreen: React.FC<any> = ({ navigation }) => {
                     <TextInput value={notes} onChangeText={setNotes} placeholder="Deskripsikan detail kerusakan di sini..." placeholderTextColor="#ffffff" multiline style={[styles.input, styles.textarea]} />
                 </View>
 
-                <TouchableOpacity style={styles.submitBtn} onPress={submit} activeOpacity={0.85}>
+                <TouchableOpacity style={[styles.submitBtn, loading && styles.submitBtnDisabled]} onPress={submit} activeOpacity={0.85} disabled={loading}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={styles.submitText}>Kirim Laporan</Text>
-                        <Ionicons name="chevron-forward" size={18} color="#e6eef6" style={{ marginLeft: 8 }} />
+                        {loading
+                            ? <ActivityIndicator color="#ffffff" size="small" />
+                            : <>
+                                <Text style={styles.submitText}>Kirim Laporan</Text>
+                                <Ionicons name="chevron-forward" size={18} color="#e6eef6" style={{ marginLeft: 8 }} />
+                            </>
+                        }
                     </View>
                 </TouchableOpacity>
             </ScrollView>
@@ -131,6 +169,7 @@ const styles = StyleSheet.create({
     input: { backgroundColor: '#40619f', borderWidth: 1, borderColor: '#405987', padding: 12, borderRadius: 10, color: '#ffffff' },
     textarea: { height: 110, textAlignVertical: 'top', marginTop: 8 },
     submitBtn: { marginTop: 18, backgroundColor: '#295196', paddingVertical: 14, borderRadius: 22, alignItems: 'center' },
+    submitBtnDisabled: { backgroundColor: '#405987', opacity: 0.8 },
     submitText: { color: '#ffffff', fontWeight: '700' },
 });
 
